@@ -1,7 +1,6 @@
 import streamlit as st
 from joblib import load
 import pandas as pd
-import numpy as np
 import plotly.express as px  # For interactive charts
 
 # Load your model and encoding dictionaries
@@ -10,23 +9,34 @@ origin_means = load('models/origin_means.joblib')
 roastlevel_means = load('models/roastlevel_means.joblib')
 feature_importance_data = load('models/feature_importance.joblib')  # Loading the feature importance data
 
-st.title('Coffee Product Performance Predictor')
+# Title and introduction
+st.title('Welcome to the Saigon Bean Bazaar Sales Estimator!')
+st.markdown("""
+
+Discover the sales potential of new coffee beans with our AI-driven estimator. Leveraging historical sales data from Saigon Bean Bazaar, this tool provides insights into how well new bean varieties might perform in our store. 
+
+Simply input details about the coffee beans you're considering, and let our model predict their sales success. Whether you're evaluating new origins, roast levels, or pricing strategies, our estimator is here to guide your decisions with data-driven confidence.
+
+**Get started** by entering the coffee bean characteristics below and press **Predict** to see the magic happen!
+""")
+
+
+# Sidebar - About description
+st.sidebar.header('About Saigon Bean Bazaar Estimator')
+st.sidebar.info("""
+This predictive tool is designed exclusively for Saigon Bean Bazaar, a leading e-commerce store specializing in premium coffee beans. By analyzing extensive past sales data, our model assesses factors like bean origin, roast level, and pricing to forecast the market appeal of upcoming coffee beans.
+""")
+
 
 # User inputs
-origin_input = st.selectbox('Select Origin', options=list(origin_means.keys()))
-roast_level_input = st.selectbox('Select Roast Level', options=list(roastlevel_means.keys()))
-price = st.number_input('Price', value=20.0)  # Example default value
-
-# Define the adjustment function
-def adjust_prediction_for_price_outliers(prediction, price, high_price_threshold=40, low_price_threshold=10):
-    if price > high_price_threshold:
-        adjusted_prediction = 'Low'
-    elif price < low_price_threshold:
-        adjusted_prediction = 'High'
-    else:
-        adjusted_prediction = prediction
-    return adjusted_prediction
-
+origin_input = st.selectbox('Select Origin', options=list(origin_means.keys()), 
+                            help='Choose the origin of the coffee bean.')
+roast_level_input = st.selectbox('Select Roast Level', options=list(roastlevel_means.keys()), 
+                                 help='Choose the roast level.')
+price = st.slider('Price ($)', min_value=5.0, max_value=60.0, value=30.0, step=0.5,
+                  help='Set the price of the coffee bean.')
+    
+# Prediction and display results directly
 if st.button('Predict'):
     origin_encoded = origin_means[origin_input]
     roast_level_encoded = roastlevel_means[roast_level_input]
@@ -41,28 +51,24 @@ if st.button('Predict'):
     # Use the DataFrame for prediction
     raw_prediction = model.predict(input_data)
     
+    # Function to adjust the prediction based on price outliers
+    def adjust_prediction_for_price_outliers(prediction, price, high_price_threshold=40, low_price_threshold=10):
+        if price > high_price_threshold:
+            return 'Low'
+        elif price < low_price_threshold:
+            return 'High'
+        else:
+            return prediction
+    
     # Adjust the prediction based on the price outliers
     adjusted_prediction = adjust_prediction_for_price_outliers(raw_prediction[0], price)
-    
-    st.write(f'Prediction: {adjusted_prediction}')
 
+    # Display the result using markdown
+    if adjusted_prediction == 'High':
+        prediction_text = '### Prediction: High\n\nThis indicates a strong sales potential for the selected coffee bean characteristics.'
+    elif adjusted_prediction == 'Medium':
+        prediction_text = '### Prediction: Medium\n\nThis indicates a moderate sales potential. Consider adjusting price or targeting specific markets.'
+    else:  # Low
+        prediction_text = '### Prediction: Low\n\nThis suggests the sales potential is below average. Review the characteristics and pricing strategy.'
 
-
-
-# Model Performance Metrics
-st.subheader('Model Performance Metrics')
-col1, col2, col3 = st.columns(3)
-col1.metric("Accuracy", "94%")
-col2.metric("Precision", "90%")
-col3.metric("Recall", "92%")
-
-# Interactive Feature Importance Chart
-st.subheader('Feature Importance')
-# Assuming 'feature_importances_' contains feature importance scores
-# and 'features' is a list of feature names
-feature_importances_ = feature_importance_data  # Example data
-features = ['Origin', 'Roast Level', 'Price']  # Example feature names
-
-fig = px.bar(x=feature_importances_, y=features, labels={'x': 'Importance', 'y': 'Feature'}, orientation='h')
-st.plotly_chart(fig, use_container_width=True)
-
+    st.markdown(prediction_text)
