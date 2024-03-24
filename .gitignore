@@ -8,8 +8,3 @@ __pycache__/
 # Ignore compiled Python files
 *.pyc
 
-# Ignore config.yaml file
-config.yaml
-
-# Ignore hashed_password.py file
-hashed_password.py
