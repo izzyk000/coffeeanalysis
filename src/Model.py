@@ -7,7 +7,6 @@ import plotly.express as px  # For interactive charts
 model = load('models/your_model.joblib')
 origin_means = load('models/origin_means.joblib')
 roastlevel_means = load('models/roastlevel_means.joblib')
-feature_importance_data = load('models/feature_importance.joblib')  # Loading the feature importance data
 
 # Title and introduction
 st.title('Welcome to the Saigon Bean Bazaar Sales Estimator!')
