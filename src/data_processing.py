@@ -21,5 +21,25 @@ def preprocess_data(coffee_products_df, sales_data_df):
     product_sales_share = sales_data_with_monthly_totals.groupby('ProductID')['SalesShare'].mean().reset_index()
     average_monthly_sales_with_share = pd.merge(average_monthly_sales, product_sales_share, on='ProductID')
     average_monthly_sales_with_share['CompositeMetric'] = average_monthly_sales_with_share['AvgMonthlySales'] * average_monthly_sales_with_share['SalesShare']
+    # Merging the processed data back with coffee_products_df
+    final_df = pd.merge(average_monthly_sales_with_share, coffee_products_df, on='ProductID', how='left')
     
-    return average_monthly_sales_with_share
+    return final_df
+
+
+def preprocess_for_roastlevel_analysis(final_df, roast_level):
+    roast_df = final_df[final_df['RoastLevel'] == roast_level]
+
+    roastlevel_analysis = (roast_df.groupby('Origin')['AvgMonthlySales']
+                           .mean()
+                           .sort_values(ascending=False)
+                           .reset_index())
+
+    return roastlevel_analysis
+
+
+def preprocess_for_roast_top10(final_df, roast_level):
+    roast10_df = final_df[final_df['RoastLevel'] == roast_level].sort_values(by='AvgMonthlySales', ascending=False)
+
+    return roast10_df
+

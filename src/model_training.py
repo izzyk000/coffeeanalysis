@@ -10,10 +10,7 @@ from data_processing import load_data, preprocess_data
 
 # Load and preprocess the data
 coffee_products_df, customers_data_df, sales_data_df = load_data()
-average_monthly_sales_with_share = preprocess_data(coffee_products_df, sales_data_df)
-
-# Merge processed data back with coffee_products_df to ensure all necessary data is present
-final_df = pd.merge(average_monthly_sales_with_share, coffee_products_df, on='ProductID', how='left')
+final_df = preprocess_data(coffee_products_df, sales_data_df)
 
 # Create Target Encoded features
 origin_means = final_df.groupby('Origin')['CompositeMetric'].mean().to_dict()
